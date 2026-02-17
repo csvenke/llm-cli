@@ -1,6 +1,6 @@
 # llm-cli
 
-A lightweight CLI tool for interacting with LLMs from the terminal.
+A minimal CLI for LLM-assisted developer workflows.
 
 ## Installation
 
