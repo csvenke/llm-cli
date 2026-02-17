@@ -8,16 +8,16 @@ import (
 	"time"
 )
 
-type mockProvider struct {
+type stubProvider struct {
 	resp string
 	err  error
 }
 
-func (m *mockProvider) Complete(ctx context.Context, system, userMsg string) (string, error) {
-	return m.resp, m.err
+func (s *stubProvider) Complete(ctx context.Context, system, userMsg string) (string, error) {
+	return s.resp, s.err
 }
 
-type mockGitClient struct {
+type stubGitClient struct {
 	diff      string
 	branch    string
 	hasParent bool
@@ -26,24 +26,24 @@ type mockGitClient struct {
 	branchErr error
 }
 
-func (m *mockGitClient) GetStagedDiff() (string, error) {
-	return m.diff, m.diffErr
+func (s *stubGitClient) GetStagedDiff() (string, error) {
+	return s.diff, s.diffErr
 }
 
-func (m *mockGitClient) GetDiffFromRevision(revision string) (string, error) {
-	return m.diff, m.diffErr
+func (s *stubGitClient) GetDiffFromRevision(revision string) (string, error) {
+	return s.diff, s.diffErr
 }
 
-func (m *mockGitClient) GetCurrentBranch() (string, error) {
-	return m.branch, m.branchErr
+func (s *stubGitClient) GetCurrentBranch() (string, error) {
+	return s.branch, s.branchErr
 }
 
-func (m *mockGitClient) HasParentCommit() (bool, error) {
-	return m.hasParent, nil
+func (s *stubGitClient) HasParentCommit() (bool, error) {
+	return s.hasParent, nil
 }
 
-func (m *mockGitClient) Commit(msg string, amend bool) error {
-	return m.commitErr
+func (s *stubGitClient) Commit(msg string, amend bool) error {
+	return s.commitErr
 }
 
 func TestParseConfig(t *testing.T) {
@@ -147,7 +147,7 @@ func TestGenerateCommitMessage(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var stderr bytes.Buffer
-			provider := &mockProvider{resp: tt.resp, err: tt.err}
+			provider := &stubProvider{resp: tt.resp, err: tt.err}
 			tickerFactory := func(d time.Duration) *time.Ticker {
 				return time.NewTicker(d)
 			}
@@ -170,7 +170,7 @@ func TestRun(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    []string
-		git     *mockGitClient
+		git     *stubGitClient
 		resp    string
 		provErr error
 		wantErr bool
@@ -178,7 +178,7 @@ func TestRun(t *testing.T) {
 		{
 			name: "successful commit flow",
 			args: []string{},
-			git: &mockGitClient{
+			git: &stubGitClient{
 				diff:   "some changes",
 				branch: "feature/test",
 			},
@@ -188,7 +188,7 @@ func TestRun(t *testing.T) {
 		{
 			name: "successful commit with issue in branch",
 			args: []string{},
-			git: &mockGitClient{
+			git: &stubGitClient{
 				diff:   "some changes",
 				branch: "feature/PROJ-123-fix",
 			},
@@ -198,7 +198,7 @@ func TestRun(t *testing.T) {
 		{
 			name: "no staged changes",
 			args: []string{},
-			git: &mockGitClient{
+			git: &stubGitClient{
 				diff: "",
 			},
 			wantErr: true,
@@ -206,7 +206,7 @@ func TestRun(t *testing.T) {
 		{
 			name: "no changes to amend",
 			args: []string{"-a"},
-			git: &mockGitClient{
+			git: &stubGitClient{
 				diff:      "",
 				hasParent: true, // HEAD~1 exists
 			},
@@ -215,7 +215,7 @@ func TestRun(t *testing.T) {
 		{
 			name: "provider fails",
 			args: []string{},
-			git: &mockGitClient{
+			git: &stubGitClient{
 				diff:   "some changes",
 				branch: "main",
 			},
@@ -225,7 +225,7 @@ func TestRun(t *testing.T) {
 		{
 			name: "git commit fails",
 			args: []string{},
-			git: &mockGitClient{
+			git: &stubGitClient{
 				diff:      "some changes",
 				branch:    "main",
 				commitErr: errors.New("commit failed"),
@@ -238,7 +238,7 @@ func TestRun(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var stderr bytes.Buffer
-			provider := &mockProvider{resp: tt.resp, err: tt.provErr}
+			provider := &stubProvider{resp: tt.resp, err: tt.provErr}
 			err := Run(context.Background(), provider, tt.git, &stderr, tt.args)
 
 			if (err != nil) != tt.wantErr {

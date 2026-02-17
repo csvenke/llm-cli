@@ -7,13 +7,13 @@ import (
 	"testing"
 )
 
-type mockProvider struct {
+type stubProvider struct {
 	resp string
 	err  error
 }
 
-func (m *mockProvider) Complete(ctx context.Context, system, userMsg string) (string, error) {
-	return m.resp, m.err
+func (s *stubProvider) Complete(ctx context.Context, system, userMsg string) (string, error) {
+	return s.resp, s.err
 }
 
 func TestRun(t *testing.T) {
@@ -69,7 +69,7 @@ func TestRun(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var output bytes.Buffer
-			provider := &mockProvider{resp: tt.resp, err: tt.err}
+			provider := &stubProvider{resp: tt.resp, err: tt.err}
 
 			err := Run(context.Background(), provider, &output, tt.args)
 
@@ -87,7 +87,7 @@ func TestRun(t *testing.T) {
 }
 
 func TestRun_NilOutputDefaultsToDiscard(t *testing.T) {
-	provider := &mockProvider{resp: "test response"}
+	provider := &stubProvider{resp: "test response"}
 	err := Run(context.Background(), provider, nil, []string{"test"})
 	if err != nil {
 		t.Errorf("Run() with nil output error = %v, want nil", err)
