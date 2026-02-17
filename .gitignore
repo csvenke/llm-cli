@@ -1,0 +1,17 @@
+# Binaries
+dist/
+*.exe
+
+# Test/coverage
+*.test
+coverage.out
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+
+# Direnv
+!.envrc
