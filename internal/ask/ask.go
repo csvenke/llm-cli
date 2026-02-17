@@ -1,0 +1,31 @@
+package ask
+
+import (
+	"context"
+	"fmt"
+	"io"
+	"strings"
+
+	"llm/internal/providers"
+)
+
+// Run executes the ask command with the given arguments.
+// Returns an error if no arguments are provided or if the provider fails.
+func Run(ctx context.Context, provider providers.Provider, output io.Writer, args []string) error {
+	if output == nil {
+		output = io.Discard
+	}
+
+	if len(args) == 0 {
+		return fmt.Errorf("usage: llm ask <question>")
+	}
+
+	question := strings.Join(args, " ")
+	response, err := provider.Complete(ctx, "", question)
+	if err != nil {
+		return err
+	}
+
+	_, err = fmt.Fprintln(output, response)
+	return err
+}
