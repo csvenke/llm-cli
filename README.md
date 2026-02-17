@@ -1,6 +1,6 @@
 # llm-cli
 
-A minimal CLI for LLM-assisted developer workflows.
+Effortless LLM-assisted developer workflows for the terminal
 
 ## Installation
 
@@ -51,7 +51,7 @@ llm commit -a
 ### Ask a question
 
 ```bash
-llm ask "How do I reverse a string in Go?"
+llm ask "How do I find files by content recursively in bash?"
 ```
 
 ## Configuration
