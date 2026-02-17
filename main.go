@@ -56,7 +56,7 @@ func main() {
 
 	switch args[0] {
 	case "ask":
-		err = ask.Run(ctx, provider, os.Stdout, args[1:])
+		err = ask.Run(ctx, provider, os.Stdout, os.Stderr, args[1:])
 	case "commit":
 		err = commit.Run(ctx, provider, &git.RealClient{}, os.Stderr, args[1:])
 	default:

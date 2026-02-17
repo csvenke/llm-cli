@@ -71,7 +71,7 @@ func TestRun(t *testing.T) {
 			var output bytes.Buffer
 			provider := &stubProvider{resp: tt.resp, err: tt.err}
 
-			err := Run(context.Background(), provider, &output, tt.args)
+			err := Run(context.Background(), provider, &output, nil, tt.args)
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Run() error = %v, wantErr %v", err, tt.wantErr)
@@ -88,7 +88,7 @@ func TestRun(t *testing.T) {
 
 func TestRun_NilOutputDefaultsToDiscard(t *testing.T) {
 	provider := &stubProvider{resp: "test response"}
-	err := Run(context.Background(), provider, nil, []string{"test"})
+	err := Run(context.Background(), provider, nil, nil, []string{"test"})
 	if err != nil {
 		t.Errorf("Run() with nil output error = %v, want nil", err)
 	}

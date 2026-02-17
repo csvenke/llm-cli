@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"testing"
-	"time"
 )
 
 type stubProvider struct {
@@ -148,11 +147,8 @@ func TestGenerateCommitMessage(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var stderr bytes.Buffer
 			provider := &stubProvider{resp: tt.resp, err: tt.err}
-			tickerFactory := func(d time.Duration) *time.Ticker {
-				return time.NewTicker(d)
-			}
 
-			msg, err := GenerateCommitMessage(context.Background(), provider, tt.prompt, &stderr, tickerFactory)
+			msg, err := GenerateCommitMessage(context.Background(), provider, tt.prompt, &stderr)
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GenerateCommitMessage() error = %v, wantErr %v", err, tt.wantErr)

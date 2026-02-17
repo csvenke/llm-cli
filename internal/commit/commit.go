@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"io"
 	"regexp"
-	"time"
 
 	"llm/internal/git"
+	"llm/internal/loading"
 	"llm/internal/providers"
 )
 
@@ -47,31 +47,10 @@ func BuildPrompt(diff, branch string) string {
 	return diff
 }
 
-func GenerateCommitMessage(ctx context.Context, provider providers.Provider, prompt string, stderr io.Writer, tickerFunc func(time.Duration) *time.Ticker) (string, error) {
-	if stderr == nil {
-		stderr = io.Discard
-	}
-	if tickerFunc == nil {
-		tickerFunc = func(d time.Duration) *time.Ticker { return time.NewTicker(d) }
-	}
-
-	done := make(chan struct{})
-	go func() {
-		ticker := tickerFunc(500 * time.Millisecond)
-		defer ticker.Stop()
-		for {
-			select {
-			case <-done:
-				return
-			case <-ticker.C:
-				_, _ = fmt.Fprint(stderr, ".")
-			}
-		}
-	}()
-
+func GenerateCommitMessage(ctx context.Context, provider providers.Provider, prompt string, stderr io.Writer) (string, error) {
+	ind := loading.Start(stderr)
 	msg, err := provider.Complete(ctx, systemPrompt, prompt)
-	close(done)
-	_, _ = fmt.Fprintln(stderr)
+	ind.Stop()
 
 	if err != nil {
 		return "", err
@@ -101,7 +80,7 @@ func Run(ctx context.Context, provider providers.Provider, git git.Client, stder
 	branch, _ := git.GetCurrentBranch()
 	prompt := BuildPrompt(diff, branch)
 
-	msg, err := GenerateCommitMessage(ctx, provider, prompt, stderr, nil)
+	msg, err := GenerateCommitMessage(ctx, provider, prompt, stderr)
 	if err != nil {
 		return err
 	}
