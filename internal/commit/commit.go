@@ -23,7 +23,7 @@ func ParseConfig(args []string) (*Config, []string, error) {
 	cfg := &Config{}
 	var remaining []string
 
-	for i := 0; i < len(args); i++ {
+	for i := range args {
 		switch args[i] {
 		case "-a", "--amend":
 			cfg.Amend = true

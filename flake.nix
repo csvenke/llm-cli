@@ -19,7 +19,10 @@
           pkgs = import nixpkgs {
             inherit system;
             overlays = [
-              (final: prev: { go = prev.go_1_24; })
+              (final: prev: {
+                go = prev.go_1_26;
+                buildGoModule = prev.buildGoModule.override { go = prev.go_1_26; };
+              })
             ];
           };
           inherit (pkgs) lib callPackage;
