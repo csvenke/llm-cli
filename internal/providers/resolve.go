@@ -28,7 +28,7 @@ func ResolveByAPIKey() (Provider, error) {
 	if apiKey := os.Getenv("ANTHROPIC_API_KEY"); apiKey != "" {
 		return NewAnthropicProvider(
 			"https://api.anthropic.com/v1/messages",
-			"claude-3-5-haiku",
+			"claude-haiku-4-5",
 			apiKey,
 		), nil
 	}
