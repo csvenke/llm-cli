@@ -2,7 +2,6 @@ package providers
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 )
 
@@ -26,26 +25,14 @@ func NewOpenRouterProvider(endpoint, model, apiKey string) Provider {
 }
 
 func (o *OpenRouterProvider) Complete(ctx context.Context, system, userMsg string) (string, error) {
-	jsonData, err := json.Marshal(openrouterRequest{
+	var r openaiResponse
+	if err := doJSONRequest(ctx, o.endpoint, openrouterRequest{
 		Model:    o.model,
 		Messages: buildMessages(system, userMsg),
-	})
-	if err != nil {
-		return "", fmt.Errorf("failed to marshal request: %w", err)
-	}
-
-	headers := map[string]string{
+	}, &r, map[string]string{
 		"Authorization": "Bearer " + o.apiKey,
-	}
-
-	body, err := doRequest(ctx, o.endpoint, jsonData, headers)
-	if err != nil {
+	}); err != nil {
 		return "", err
-	}
-
-	var r openaiResponse
-	if err := json.Unmarshal(body, &r); err != nil {
-		return "", fmt.Errorf("failed to parse response: %w", err)
 	}
 
 	if r.Error != nil {

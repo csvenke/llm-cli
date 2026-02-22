@@ -2,7 +2,6 @@ package providers
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 )
 
@@ -37,29 +36,17 @@ func NewAnthropicProvider(endpoint, model, apiKey string) Provider {
 }
 
 func (a *AnthropicProvider) Complete(ctx context.Context, system, userMsg string) (string, error) {
-	jsonData, err := json.Marshal(anthropicRequest{
+	var r anthropicResponse
+	if err := doJSONRequest(ctx, a.endpoint, anthropicRequest{
 		Model:     a.model,
 		MaxTokens: 4096,
 		System:    system,
 		Messages:  []Message{{Role: "user", Content: userMsg}},
-	})
-	if err != nil {
-		return "", fmt.Errorf("failed to marshal request: %w", err)
-	}
-
-	headers := map[string]string{
+	}, &r, map[string]string{
 		"x-api-key":         a.apiKey,
 		"anthropic-version": "2023-06-01",
-	}
-
-	body, err := doRequest(ctx, a.endpoint, jsonData, headers)
-	if err != nil {
+	}); err != nil {
 		return "", err
-	}
-
-	var r anthropicResponse
-	if err := json.Unmarshal(body, &r); err != nil {
-		return "", fmt.Errorf("failed to parse response: %w", err)
 	}
 
 	if r.Error != nil {

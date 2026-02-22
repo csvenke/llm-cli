@@ -2,7 +2,6 @@ package providers
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 )
 
@@ -37,29 +36,17 @@ func NewOpencodeZenProvider(endpoint, model, apiKey string) Provider {
 }
 
 func (o *OpencodeZenProvider) Complete(ctx context.Context, system, userMsg string) (string, error) {
-	jsonData, err := json.Marshal(opencodeZenRequest{
+	var r opencodeZenResponse
+	if err := doJSONRequest(ctx, o.endpoint, opencodeZenRequest{
 		Model:     o.model,
 		MaxTokens: 4096,
 		System:    system,
 		Messages:  []Message{{Role: "user", Content: userMsg}},
-	})
-	if err != nil {
-		return "", fmt.Errorf("failed to marshal request: %w", err)
-	}
-
-	headers := map[string]string{
+	}, &r, map[string]string{
 		"x-api-key":         o.apiKey,
 		"anthropic-version": "2023-06-01",
-	}
-
-	body, err := doRequest(ctx, o.endpoint, jsonData, headers)
-	if err != nil {
+	}); err != nil {
 		return "", err
-	}
-
-	var r opencodeZenResponse
-	if err := json.Unmarshal(body, &r); err != nil {
-		return "", fmt.Errorf("failed to parse response: %w", err)
 	}
 
 	if r.Error != nil {

@@ -3,6 +3,7 @@ package providers
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -41,7 +42,24 @@ func doRequest(ctx context.Context, endpoint string, body []byte, headers map[st
 	return respBody, nil
 }
 
-// buildMessages creates a message slice with optional system prompt and user message.
+func doJSONRequest(ctx context.Context, endpoint string, req, resp any, headers map[string]string) error {
+	jsonData, err := json.Marshal(req)
+	if err != nil {
+		return fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	body, err := doRequest(ctx, endpoint, jsonData, headers)
+	if err != nil {
+		return err
+	}
+
+	if err := json.Unmarshal(body, resp); err != nil {
+		return fmt.Errorf("failed to parse response: %w", err)
+	}
+
+	return nil
+}
+
 func buildMessages(system, user string) []Message {
 	msgs := make([]Message, 0, 2)
 	if system != "" {
