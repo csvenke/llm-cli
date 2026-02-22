@@ -60,6 +60,7 @@ Set one of the following environment variables (checked in order):
 
 | Variable                  | Description              |
 | ------------------------- | ------------------------ |
+| `OPENROUTER_API_KEY`      | OpenRouter API key       |
 | `OPENCODE_ZEN_API_KEY`    | OpenCode Zen API key     |
 | `ANTHROPIC_API_KEY`       | Anthropic API key        |
 | `OPENAI_API_KEY`          | OpenAI API key           |
