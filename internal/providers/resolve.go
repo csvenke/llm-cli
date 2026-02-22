@@ -20,7 +20,7 @@ func ResolveByAPIKey() (Provider, error) {
 	if apiKey := os.Getenv("OPENCODE_ZEN_API_KEY"); apiKey != "" {
 		return NewOpencodeZenProvider(
 			"https://opencode.ai/zen/v1/messages",
-			"claude-3-5-haiku",
+			"claude-haiku-4-5",
 			apiKey,
 		), nil
 	}
