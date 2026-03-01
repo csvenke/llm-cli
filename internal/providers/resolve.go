@@ -12,7 +12,7 @@ func ResolveByAPIKey() (Provider, error) {
 	if apiKey := os.Getenv("OPENROUTER_API_KEY"); apiKey != "" {
 		return NewOpenRouterProvider(
 			"https://openrouter.ai/api/v1/chat/completions",
-			"anthropic/claude-3.5-haiku",
+			"anthropic/claude-haiku-4.5",
 			apiKey,
 		), nil
 	}
