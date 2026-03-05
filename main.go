@@ -2,15 +2,15 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"llm/internal/ask"
-	"llm/internal/commit"
-	"llm/internal/git"
+	"llm/internal/cmd"
 	"llm/internal/providers"
 )
 
@@ -54,12 +54,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	switch args[0] {
-	case "ask":
-		err = ask.Run(ctx, provider, os.Stdout, os.Stderr, args[1:])
-	case "commit":
-		err = commit.Run(ctx, provider, &git.RealClient{}, os.Stderr, args[1:])
-	default:
+	err = cmd.Run(ctx, provider, os.Stdout, os.Stderr, args)
+	if errors.Is(err, cmd.ErrUnknownCommand) {
 		usage()
 		os.Exit(1)
 	}
@@ -71,10 +67,14 @@ func main() {
 }
 
 func usage() {
-	fmt.Fprintf(os.Stderr, "Usage: llm <command> [options]\n\n")
-	fmt.Fprintf(os.Stderr, "Commands:\n")
-	fmt.Fprintf(os.Stderr, "  ask <question>      Ask a question\n")
-	fmt.Fprintf(os.Stderr, "  commit [-a|--amend] Draft a commit message\n")
-	fmt.Fprintf(os.Stderr, "\nOptions:\n")
+	usageTo(os.Stderr)
+}
+
+func usageTo(w io.Writer) {
+	cmd.UsageTo(w)
+	fmt.Fprintf(w, "\nOptions:\n")
+	oldOutput := flag.CommandLine.Output()
+	flag.CommandLine.SetOutput(w)
+	defer flag.CommandLine.SetOutput(oldOutput)
 	flag.PrintDefaults()
 }
