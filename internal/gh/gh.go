@@ -31,18 +31,6 @@ var (
 
 		return strings.TrimSpace(stdout.String()), nil
 	}
-	runGitCommand = func(args ...string) (string, error) {
-		cmd := execCommand("git", args...)
-		var stdout, stderr bytes.Buffer
-		cmd.Stdout = &stdout
-		cmd.Stderr = &stderr
-
-		if err := cmd.Run(); err != nil {
-			return "", fmt.Errorf("git %s: %s", strings.Join(args, " "), strings.TrimSpace(stderr.String()))
-		}
-
-		return strings.TrimSpace(stdout.String()), nil
-	}
 )
 
 type PullRequest struct {
@@ -112,30 +100,6 @@ func CreatePullRequest(pr *PullRequest) (string, error) {
 	}
 
 	return output, nil
-}
-
-func EnsureBranchPushed(git Client) error {
-	if _, err := runGitCommand("rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"); err == nil {
-		if _, err := runGitCommand("push"); err != nil {
-			return fmt.Errorf("pushing current branch: %w", err)
-		}
-		return nil
-	}
-
-	branch, err := git.GetCurrentBranch()
-	if err != nil {
-		return fmt.Errorf("getting current branch for push: %w", err)
-	}
-
-	if strings.TrimSpace(branch) == "" {
-		return fmt.Errorf("unable to determine current branch for push")
-	}
-
-	if _, err := runGitCommand("push", "-u", "origin", branch); err != nil {
-		return fmt.Errorf("pushing current branch to origin: %w", err)
-	}
-
-	return nil
 }
 
 func getBaseDiffContext(git Client) (string, string, string, error) {

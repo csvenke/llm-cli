@@ -137,11 +137,9 @@ func TestRunRoutesAskAndCommit(t *testing.T) {
 func TestRunGHSubcommands(t *testing.T) {
 	originalGHRun := prcmd.RunFunc
 	originalGHCreatePullRequest := prcmd.CreatePullRequestFunc
-	originalEnsureBranchPushed := prcmd.EnsureBranchPushedFunc
 	t.Cleanup(func() {
 		prcmd.RunFunc = originalGHRun
 		prcmd.CreatePullRequestFunc = originalGHCreatePullRequest
-		prcmd.EnsureBranchPushedFunc = originalEnsureBranchPushed
 	})
 
 	deps := Dependencies{
@@ -157,7 +155,6 @@ func TestRunGHSubcommands(t *testing.T) {
 		args          []string
 		runErr        error
 		createErr     error
-		pushErr       error
 		createOutput  string
 		wantErr       bool
 		wantErrSubstr string
@@ -197,13 +194,6 @@ func TestRunGHSubcommands(t *testing.T) {
 			wantErrSubstr: "generation failed",
 		},
 		{
-			name:          "returns push error",
-			args:          []string{"gh", "pr"},
-			pushErr:       errors.New("push failed"),
-			wantErr:       true,
-			wantErrSubstr: "push failed",
-		},
-		{
 			name:          "returns create error",
 			args:          []string{"gh", "pr"},
 			createErr:     errors.New("gh pr create failed"),
@@ -233,10 +223,6 @@ func TestRunGHSubcommands(t *testing.T) {
 					return "", tt.createErr
 				}
 				return tt.createOutput, nil
-			}
-
-			prcmd.EnsureBranchPushedFunc = func(client gh.Client) error {
-				return tt.pushErr
 			}
 
 			err := defaultRegistry.Run(context.Background(), deps, tt.args)

@@ -96,8 +96,8 @@ func Run(ctx context.Context, provider providers.Provider, stdout, stderr io.Wri
 }
 
 func (r *Registry) UsageTo(w io.Writer) {
-	fmt.Fprintf(w, "Usage: llm <command> [options]\n\n")
-	fmt.Fprintf(w, "Commands:\n")
+	_, _ = fmt.Fprintf(w, "Usage: llm <command> [options]\n\n")
+	_, _ = fmt.Fprintf(w, "Commands:\n")
 	r.writeCommands(w, r.commands, 2)
 }
 
@@ -150,9 +150,9 @@ func findCommand(commands []*Command, name string) *Command {
 func (r *Registry) writeCommands(w io.Writer, commands []*Command, indent int) {
 	for _, cmd := range commands {
 		if indent <= 2 {
-			fmt.Fprintf(w, "%s%-19s %s\n", spaces(indent), cmd.Usage, cmd.Description)
+			_, _ = fmt.Fprintf(w, "%s%-19s %s\n", spaces(indent), cmd.Usage, cmd.Description)
 		} else {
-			fmt.Fprintf(w, "%s%-17s %s\n", spaces(indent), cmd.Usage, cmd.Description)
+			_, _ = fmt.Fprintf(w, "%s%-17s %s\n", spaces(indent), cmd.Usage, cmd.Description)
 		}
 
 		if len(cmd.Subcommands) > 0 {
