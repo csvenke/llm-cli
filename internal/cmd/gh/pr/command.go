@@ -16,9 +16,8 @@ const (
 )
 
 var (
-	RunFunc                = gh.Run
-	CreatePullRequestFunc  = gh.CreatePullRequest
-	EnsureBranchPushedFunc = gh.EnsureBranchPushed
+	RunFunc               = gh.Run
+	CreatePullRequestFunc = gh.CreatePullRequest
 )
 
 func Run(ctx context.Context, provider providers.Provider, client gh.Client, stdout, stderr io.Writer, args []string) error {
@@ -28,10 +27,6 @@ func Run(ctx context.Context, provider providers.Provider, client gh.Client, std
 
 	pr, err := RunFunc(ctx, provider, client, stderr, args)
 	if err != nil {
-		return err
-	}
-
-	if err := EnsureBranchPushedFunc(client); err != nil {
 		return err
 	}
 

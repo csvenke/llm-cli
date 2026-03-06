@@ -72,7 +72,7 @@ func usage() {
 
 func usageTo(w io.Writer) {
 	cmd.UsageTo(w)
-	fmt.Fprintf(w, "\nOptions:\n")
+	_, _ = fmt.Fprintf(w, "\nOptions:\n")
 	oldOutput := flag.CommandLine.Output()
 	flag.CommandLine.SetOutput(w)
 	defer flag.CommandLine.SetOutput(oldOutput)
