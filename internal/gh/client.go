@@ -15,6 +15,8 @@ type Client interface {
 	GetDefaultBranch() (string, error)
 	GetMergeBase(base, head string) (string, error)
 	GetDiffRange(from, to string) (string, error)
+	HasUpstream(branch string) (bool, error)
+	PushWithUpstream(branch string) error
 }
 
 type RealClient struct{}
@@ -33,6 +35,19 @@ func (r *RealClient) GetMergeBase(base, head string) (string, error) {
 
 func (r *RealClient) GetDiffRange(from, to string) (string, error) {
 	return r.exec("diff", fmt.Sprintf("%s..%s", from, to))
+}
+
+func (r *RealClient) HasUpstream(branch string) (bool, error) {
+	upstream, err := r.exec("for-each-ref", "--format=%(upstream:short)", "refs/heads/"+branch)
+	if err != nil {
+		return false, err
+	}
+	return upstream != "", nil
+}
+
+func (r *RealClient) PushWithUpstream(branch string) error {
+	_, err := r.exec("push", "-u", "origin", branch)
+	return err
 }
 
 func (r *RealClient) exec(args ...string) (string, error) {

@@ -5,6 +5,9 @@ import (
 	"context"
 	"errors"
 	"io"
+	"llm/internal/gh"
+	"llm/internal/git"
+	"llm/internal/providers"
 	"reflect"
 	"strings"
 	"testing"
@@ -12,9 +15,6 @@ import (
 	askcmd "llm/internal/cmd/ask"
 	commitcmd "llm/internal/cmd/commit"
 	prcmd "llm/internal/cmd/gh/pr"
-	"llm/internal/gh"
-	"llm/internal/git"
-	"llm/internal/providers"
 )
 
 type stubProvider struct{}
@@ -61,6 +61,14 @@ func (s *stubGHClient) GetMergeBase(base, head string) (string, error) {
 
 func (s *stubGHClient) GetDiffRange(from, to string) (string, error) {
 	return "", nil
+}
+
+func (s *stubGHClient) HasUpstream(branch string) (bool, error) {
+	return false, nil
+}
+
+func (s *stubGHClient) PushWithUpstream(branch string) error {
+	return nil
 }
 
 func TestUsageIncludesNestedGHSubcommands(t *testing.T) {
@@ -217,7 +225,7 @@ func TestRunGHSubcommands(t *testing.T) {
 				return &gh.PullRequest{Title: "Add gh pr command", Body: "## Summary\n- Add command wiring"}, nil
 			}
 
-			prcmd.CreatePullRequestFunc = func(pr *gh.PullRequest) (string, error) {
+			prcmd.CreatePullRequestFunc = func(pr *gh.PullRequest, branch string, git gh.Client) (string, error) {
 				gotCreatedPR = pr
 				if tt.createErr != nil {
 					return "", tt.createErr

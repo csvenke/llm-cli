@@ -82,6 +82,10 @@ func Run(ctx context.Context, provider providers.Provider, git Client, stderr io
 }
 
 func CreatePullRequest(pr *PullRequest) (string, error) {
+	return CreatePullRequestWithBranch(pr, "", nil)
+}
+
+func CreatePullRequestWithBranch(pr *PullRequest, branch string, git Client) (string, error) {
 	if pr == nil {
 		return "", fmt.Errorf("pull request content is required")
 	}
@@ -92,6 +96,19 @@ func CreatePullRequest(pr *PullRequest) (string, error) {
 
 	if strings.TrimSpace(pr.Body) == "" {
 		return "", fmt.Errorf("pull request body is required")
+	}
+
+	if git != nil && branch != "" {
+		hasUpstream, err := git.HasUpstream(branch)
+		if err != nil {
+			return "", fmt.Errorf("checking upstream: %w", err)
+		}
+
+		if !hasUpstream {
+			if err := git.PushWithUpstream(branch); err != nil {
+				return "", fmt.Errorf("pushing branch: %w", err)
+			}
+		}
 	}
 
 	_, err := runGHCommand("pr", "view", "--json", "url")
