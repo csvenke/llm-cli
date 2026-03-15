@@ -94,6 +94,15 @@ func CreatePullRequest(pr *PullRequest) (string, error) {
 		return "", fmt.Errorf("pull request body is required")
 	}
 
+	_, err := runGHCommand("pr", "view", "--json", "url")
+	if err == nil {
+		_, err := runGHCommand("pr", "edit", "--title", pr.Title, "--body", pr.Body)
+		if err != nil {
+			return "", err
+		}
+		return "Pull request updated successfully", nil
+	}
+
 	output, err := runGHCommand("pr", "create", "--title", pr.Title, "--body", pr.Body)
 	if err != nil {
 		return "", err

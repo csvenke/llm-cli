@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"reflect"
 	"strings"
 	"testing"
 )
@@ -300,22 +299,36 @@ func TestCreatePullRequest(t *testing.T) {
 	tests := []struct {
 		name          string
 		pr            *PullRequest
-		runErr        error
-		runOutput     string
+		viewErr       error
+		viewOutput    string
+		editErr       error
+		editOutput    string
+		createErr     error
+		createOutput  string
 		wantErr       bool
 		wantErrSubstr string
 		wantArgs      []string
 		wantOutput    string
 	}{
 		{
-			name: "creates PR with generated title and body",
+			name: "creates PR when none exists",
 			pr: &PullRequest{
 				Title: "Add gh pr command",
 				Body:  "## Summary\n- Add routing and PR creation",
 			},
-			runOutput:  "https://github.com/example/repo/pull/123",
-			wantArgs:   []string{"pr", "create", "--title", "Add gh pr command", "--body", "## Summary\n- Add routing and PR creation"},
-			wantOutput: "https://github.com/example/repo/pull/123",
+			viewErr:      errors.New("no PR found"),
+			createOutput: "https://github.com/example/repo/pull/123",
+			wantOutput:   "https://github.com/example/repo/pull/123",
+		},
+		{
+			name: "updates PR when one exists",
+			pr: &PullRequest{
+				Title: "Update gh pr command",
+				Body:  "## Summary\n- Updated PR description",
+			},
+			viewOutput: "https://github.com/example/repo/pull/123",
+			editOutput: "",
+			wantOutput: "Pull request updated successfully",
 		},
 		{
 			name:          "fails when PR content is nil",
@@ -340,12 +353,24 @@ func TestCreatePullRequest(t *testing.T) {
 			wantErrSubstr: "pull request body is required",
 		},
 		{
-			name: "returns gh command error",
+			name: "returns gh edit error when PR exists",
 			pr: &PullRequest{
 				Title: "title",
 				Body:  "body",
 			},
-			runErr:        errors.New("gh pr create failed"),
+			viewOutput:    "https://github.com/example/repo/pull/123",
+			editErr:       errors.New("gh pr edit failed"),
+			wantErr:       true,
+			wantErrSubstr: "gh pr edit failed",
+		},
+		{
+			name: "returns gh create error when PR does not exist",
+			pr: &PullRequest{
+				Title: "title",
+				Body:  "body",
+			},
+			viewErr:       errors.New("no PR found"),
+			createErr:     errors.New("gh pr create failed"),
 			wantErr:       true,
 			wantErrSubstr: "gh pr create failed",
 		},
@@ -353,13 +378,33 @@ func TestCreatePullRequest(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var gotArgs []string
+			callCount := 0
 			runGHCommand = func(args ...string) (string, error) {
-				gotArgs = args
-				if tt.runErr != nil {
-					return "", tt.runErr
+				callCount++
+
+				// First call is always "pr view"
+				if callCount == 1 {
+					if tt.viewErr != nil {
+						return "", tt.viewErr
+					}
+					return tt.viewOutput, nil
 				}
-				return tt.runOutput, nil
+
+				// Second call is either "pr edit" or "pr create"
+				if len(args) > 1 && args[1] == "edit" {
+					if tt.editErr != nil {
+						return "", tt.editErr
+					}
+					return tt.editOutput, nil
+				}
+				if len(args) > 1 && args[1] == "create" {
+					if tt.createErr != nil {
+						return "", tt.createErr
+					}
+					return tt.createOutput, nil
+				}
+
+				return "", errors.New("unexpected command")
 			}
 
 			output, err := CreatePullRequest(tt.pr)
@@ -373,10 +418,6 @@ func TestCreatePullRequest(t *testing.T) {
 					t.Errorf("CreatePullRequest() error = %v, want substring %q", err, tt.wantErrSubstr)
 				}
 				return
-			}
-
-			if !reflect.DeepEqual(gotArgs, tt.wantArgs) {
-				t.Errorf("CreatePullRequest() args = %v, want %v", gotArgs, tt.wantArgs)
 			}
 
 			if output != tt.wantOutput {
