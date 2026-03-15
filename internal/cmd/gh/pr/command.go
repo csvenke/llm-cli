@@ -17,7 +17,7 @@ const (
 
 var (
 	RunFunc               = gh.Run
-	CreatePullRequestFunc = gh.CreatePullRequest
+	CreatePullRequestFunc = gh.CreatePullRequestWithBranch
 )
 
 func Run(ctx context.Context, provider providers.Provider, client gh.Client, stdout, stderr io.Writer, args []string) error {
@@ -30,7 +30,9 @@ func Run(ctx context.Context, provider providers.Provider, client gh.Client, std
 		return err
 	}
 
-	output, err := CreatePullRequestFunc(pr)
+	branch, _ := client.GetCurrentBranch()
+
+	output, err := CreatePullRequestFunc(pr, branch, client)
 	if err != nil {
 		return err
 	}
